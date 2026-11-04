@@ -35,7 +35,6 @@ consumer.Received += async ( model, ea ) =>
 
     string id = message.Id;
 
-    // 🔥 ДОБАВЬ ЭТО
     TimeSpan interval = TimeSpan.FromSeconds( new Random().Next( 3, 15 ) );
     Console.WriteLine( $"Waiting {interval}" );
     await Task.Delay( interval );
