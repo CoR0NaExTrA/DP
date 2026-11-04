@@ -1,11 +1,14 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RankCalculator;
-using StackExchange.Redis;
+using ShardLibrary;
 using System.Text;
 using System.Text.Json;
 
-var factory = new ConnectionFactory() { HostName = "localhost" };
+var factory = new ConnectionFactory()
+{
+    HostName = "localhost"
+};
 
 using var connection = factory.CreateConnection();
 using var channel = connection.CreateModel();
@@ -21,25 +24,7 @@ channel.QueueDeclare(
     autoDelete: false,
     arguments: null );
 
-var mainConn = Environment.GetEnvironmentVariable( "DB_MAIN" ) ?? "localhost:6000";
-var ruConn = Environment.GetEnvironmentVariable( "DB_RU" ) ?? "localhost:6001";
-var euConn = Environment.GetEnvironmentVariable( "DB_EU" ) ?? "localhost:6002";
-var asiaConn = Environment.GetEnvironmentVariable( "DB_ASIA" ) ?? "localhost:6003";
-
-var main = ConnectionMultiplexer.Connect( mainConn );
-var ru = ConnectionMultiplexer.Connect( ruConn );
-var eu = ConnectionMultiplexer.Connect( euConn );
-var asia = ConnectionMultiplexer.Connect( asiaConn );
-
-var mainDb = main.GetDatabase();
-
-IDatabase GetShard( string region ) => region switch
-{
-    "RU" => ru.GetDatabase(),
-    "EU" => eu.GetDatabase(),
-    "ASIA" => asia.GetDatabase(),
-    _ => throw new Exception( "Unknown region" )
-};
+var shardManager = RedisConnectionsFactory.Create();
 
 var consumer = new EventingBasicConsumer( channel );
 
@@ -52,14 +37,7 @@ consumer.Received += ( model, ea ) =>
 
     string id = message.Id;
 
-    string textKey = "TEXT-" + id;
-    string rankKey = "RANK-" + id;
-
-    string region = mainDb.StringGet( "MAP-" + id );
-
-    Console.WriteLine( $"LOOKUP: {id}, {region}" );
-
-    var db = GetShard( region );
+    var db = shardManager.GetShardById( id );
 
     string text = db.StringGet( "TEXT-" + id );
 
@@ -102,8 +80,7 @@ double CalculateRank( string text )
     return ( double )nonAlphabetic / text.Length;
 }
 
-bool IsLatin( char c ) =>
-    ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' );
+bool IsLatin( char c ) => ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' );
 
 bool IsCyrillic( char c ) =>
     ( c >= 'а' && c <= 'я' ) ||
