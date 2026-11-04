@@ -1,0 +1,32 @@
+﻿@page
+@model Valuator.Pages.LoginModel
+@{
+}
+
+<h2>Login</h2>
+
+<form method="post">
+
+    <input asp-for="Login"
+           placeholder="Login" />
+
+    <br />
+
+    <input asp-for="Password"
+           type="password"
+           placeholder="Password" />
+
+    <br />
+
+    <button type="submit">
+        Login
+    </button>
+
+    <p>
+        No account?
+        <a href="/Register">
+            Register
+        </a>
+    </p>
+
+</form>
