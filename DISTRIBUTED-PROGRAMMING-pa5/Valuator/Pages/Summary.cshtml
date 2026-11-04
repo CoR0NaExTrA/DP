@@ -1,0 +1,45 @@
+﻿@page
+@model Valuator.Pages.SummaryModel
+@{
+}
+<p>Оценка содержания: <span id="rank">Загрузка...</span></p>
+<p>Плагиат: <span id="similarity">Загрузка...</span></p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get("id");
+
+    const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/summaryHub")
+    .build();
+
+    connection.start().then(async () => {
+    await connection.invoke("JoinGroup", id);
+
+    // 🔥 ДОГРУЗКА данных
+    const response = await fetch(`/summary?handler=Data&id=${id}`);
+    const data = await response.json();
+
+    if (data.similarity !== null) {
+    document.getElementById("similarity").innerText = data.similarity;
+    }
+
+    if (data.rank !== null) {
+    document.getElementById("rank").innerText = data.rank;
+    }
+    });
+
+    connection.on("ReceiveUpdate", function (message) {
+    const data = JSON.parse(message);
+
+    if (data.Rank !== undefined) {
+    document.getElementById("rank").innerText = data.Rank;
+    }
+
+    if (data.Similarity !== undefined) {
+    document.getElementById("similarity").innerText = data.Similarity;
+    }
+    });
+</script>
