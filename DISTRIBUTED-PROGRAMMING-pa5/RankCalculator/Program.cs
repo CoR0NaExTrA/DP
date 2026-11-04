@@ -48,7 +48,6 @@ consumer.Received += async ( model, ea ) =>
 
     db.StringSet( rankKey, rank );
 
-    // событие как было
     var rankEvent = new RankCalculatedEvent
     {
         Id = id,
