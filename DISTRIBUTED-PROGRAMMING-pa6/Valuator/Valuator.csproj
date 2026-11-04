@@ -11,4 +11,8 @@
     <PackageReference Include="StackExchange.Redis" Version="2.10.14" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ShardLibrary\ShardLibrary.csproj" />
+  </ItemGroup>
+
 </Project>

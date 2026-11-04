@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using RabbitMQ.Client;
-using StackExchange.Redis;
+using ShardLibrary;
 using System.Text;
 using System.Text.Json;
 
@@ -24,7 +24,6 @@ public class IndexModel : PageModel
 
         string region = CountryRegionMap.GetRegion( country );
 
-        // 🔥 сохраняем shard map
         _shardManager.SaveShardKey( id, region );
 
         var db = _shardManager.GetShard( region );
